@@ -56,8 +56,8 @@ First we are going to create the resource GitRepository that will contain the
 helm chart repository.
 
 ```shell
-cat <<EOF > gitrepository.yaml
-apiVersion: source.toolkit.fluxcd.io/v1
+~$ cat <<EOF > gitrepository.yaml
+apiVersion: source.toolkit.fluxcd.io/v1beta1
 kind: GitRepository
 metadata:
   name: poc-starlingx
@@ -69,15 +69,17 @@ spec:
 
 EOF
 
-kubectl apply -f gitrepository.yaml
+~$ kubectl apply -f gitrepository.yaml
 ```
+
 The command above will create a GitRepository resource called poc-starlingx that
 contains the contents of https://github.com/bmuniz-daitan/poc-starlingx-messages.git
 
 ```shell
-kubectl get gitrepositories
+~$ kubectl get gitrepositories
 
-
+NAME            URL                                                           AGE   READY
+poc-starlingx   https://github.com/bmuniz-daitan/poc-starlingx-messages.git   49s   True
 ```
 
 #### Helm Controller
@@ -87,10 +89,10 @@ releases in a declarative way. The resource HelmRelease will define the desired
 state of a Helm release, and based on actions upon this resource (creation,
 deletion or mutation) the controller will perform Helm actions.
 
-To deploy the demo application, we will execute the following command:
+To deploy the demo application, we will execute the following commands:
 
 ```shell
-cat <<EOF > helmrelease.yaml
+~$ cat <<EOF > helmrelease.yaml
 apiVersion: "helm.toolkit.fluxcd.io/v2beta1"
 kind: HelmRelease
 metadata:
@@ -125,7 +127,7 @@ spec:
 
 EOF
 
-kubectl apply -f helmrelease.yaml
+~$ kubectl apply -f helmrelease.yaml
 ```
 
 The command above will create two resources. First it will create a HelmChart
@@ -133,19 +135,77 @@ resource that will hold the helm-chart itself that will be loaded from the
 GitRepository. 
 
 ```shell
-kubectl get helmcharts
+~$ kubectl get helmcharts
 
+NAME                    CHART          VERSION   SOURCE KIND     SOURCE NAME     AGE     READY   STATUS
+default-poc-starlingx   ./helm-chart   1.5.2     GitRepository   poc-starlingx   2m41s   True    packaged 'poc-starlingx' chart with version '1.5.2'
 
 ```
-
 
 After the HelmChart resource is successfully created it will
 create the HelmRelease for the deployment of the application with the values
 informed inside the yaml file.
 
 ```shell
-kubectl get helmreleases
+~$ kubectl get helmreleases
 
+NAME            AGE     READY   STATUS
+poc-starlingx   3m20s   True    Release reconciliation succeeded
+```
+
+```shell
+~$ kubectl get all
+
+NAME                                 READY   STATUS    RESTARTS   AGE
+pod/poc-starlingx-5df9c9947f-7qdss   1/1     Running   0          4m15s
+
+NAME                    TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+service/poc-starlingx   NodePort    10.101.7.175   <none>        8100:31234/TCP   4m15s
+
+NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/poc-starlingx   1/1     1            1           4m15s
+
+NAME                                       DESIRED   CURRENT   READY   AGE
+replicaset.apps/poc-starlingx-5df9c9947f   1         1         1       4m15s
 
 ```
 
+#### Modifying the HelmRelease
+
+As said before, actions upon the helmrelease will cause the controller to
+perform Helm actions on the deployment. So we can see these type of actions let's
+modify a value on the HelmRelease file and see what happens. We will change the
+value of `spec.values.kube.replicas` to 5, like:
+
+```shell
+
+kube:
+  port: 31234
+  replicas: 5
+  name: poc-starlingx
+
+```
+We will, then, run `kubectl apply -f helmrelease.yaml`. A message saying that the
+HelmRelease was configured will be given. If you run `kubectl get pods`, you will see that 4
+additional pods were created.
+
+```shell
+~$ kubectl get pods
+
+NAME                             READY   STATUS    RESTARTS   AGE
+poc-starlingx-5df9c9947f-7qdss   1/1     Running   0          29m
+poc-starlingx-5df9c9947f-97lqw   1/1     Running   0          17s
+poc-starlingx-5df9c9947f-nzh6b   1/1     Running   0          17s
+poc-starlingx-5df9c9947f-r2xj9   1/1     Running   0          17s
+poc-starlingx-5df9c9947f-rhjjs   1/1     Running   0          17s
+
+```
+
+#### Additional resources
+
+On the [FluxCD official documentation](https://fluxcd.io/flux/) you can find
+some others resources that Flux provides, that may be better suited for your
+specific case. For example, another resource available in flux that can be used
+is the `kustomization`. This resource is responsible for defining a pipeline
+for fetching, decrypting, building, validating and applying kustomize overlays
+or plain Kubernetes manifests.
