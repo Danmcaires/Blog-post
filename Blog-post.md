@@ -37,9 +37,12 @@ refer to the [official documentation](https://fluxcd.io/flux/components/).
 
 
 There are many ways of deploying an application using Flux. In this demonstration
-I will deploy the demo app by creating a source controller and a helm controller.
+I will deploy the demo app by creating a source controller and a Helm controller.
 
 #### Source Controller
+
+The source controller is a FluxCD component responsible for providing a common
+interface for the artifacts acquisition.
 
 FluxCD offers 5 types of source controllers:
 
@@ -53,7 +56,7 @@ For this demonstration I will create a GitRepository. Make sure to choose the
 best type of source controller for your specific use case.
 
 First I am going to create the resource GitRepository that will contain the
-helm chart repository.
+Helm chart repository.
 
 ```shell
 ~$ cat <<EOF > gitrepository.yaml
@@ -84,7 +87,7 @@ poc-starlingx   https://github.com/bmuniz-daitan/poc-starlingx-messages.git   49
 
 #### Helm Controller
 
-The helm controller is an operator that allows the management of helm charts
+The Helm controller is an operator that allows the management of Helm charts
 releases in a declarative way. The resource HelmRelease will define the desired
 state of a Helm release, and based on actions upon this resource (creation,
 deletion or mutation) the controller will perform Helm actions.
@@ -102,12 +105,12 @@ spec:
   interval: 2m
   chart:
     spec:
-      chart: ./helm-chart  # Relative path of the helm chart inside the repo.
+      chart: ./helm-chart  # Relative path of the Helm chart inside the repo.
       version: 1.5.2
       sourceRef:
         kind: GitRepository
         name: poc-starlingx
-  values: # Override values for the helm chart
+  values: # Override values for the Helm chart
     env:
       - name: MODE
         value: node
@@ -130,8 +133,8 @@ EOF
 ~$ kubectl apply -f helmrelease.yaml
 ```
 
-The kubectl command above will create two resources. First it will create a
-HelmChart resource that will hold the helm-chart itself that will be loaded from
+The `kubectl` command above will create two resources. First it will create a
+HelmChart resource that will hold the Helm chart itself that will be loaded from
 the GitRepository.
 
 ```shell
@@ -174,10 +177,11 @@ replicaset.apps/poc-starlingx-5df9c9947f   1         1         1       4m15s
 
 #### Modifying the HelmRelease
 
-As I said before, actions upon the helmrelease will cause the controller to
+As I said before, actions upon the HelmRelease will cause the controller to
 perform Helm actions on the deployment. So you can see these type of actions
 let's modify a value on the HelmRelease file and see what happens.
-I will change the value of `spec.values.kube.replicas` to 5, like:
+I will change the value of `replicas` from 1 to 5, this value can be found in
+`spec.values.kube.replicas` inside the `helmrelease.yaml` file:
 
 ```shell
 
@@ -188,8 +192,14 @@ kube:
 
 ```
 I will, then, run `kubectl apply -f helmrelease.yaml`. A message saying that the
-HelmRelease was configured will be given. If you run `kubectl get pods`,
-you can see that 4 additional pods were created.
+HelmRelease was configured will be given.
+
+```shell
+~$ kubectl apply -f helmrelease.yaml
+
+helmrelease.helm.toolkit.fluxcd.io/poc-starlingx configured
+```
+If you run `kubectl get pods`, you can see that 4 additional pods were created.
 
 ```shell
 ~$ kubectl get pods
