@@ -67,7 +67,7 @@ metadata:
 spec:
   interval: 2m
   url: https://github.com/bmuniz-daitan/poc-starlingx-messages.git
-  ref: 
+  ref:
     branch: main
 
 EOF
@@ -224,7 +224,23 @@ or plain Kubernetes manifests.
 
 ## GitOps
 
-> TODO: add the befits from using flux to maintain sync between repo and deployment,
+One of the greatest benefits of using FluxCD resources, is the possibility to
+apply GitOps to your deployments. GitOps is a set of practices, such as version
+control, collaboration, compliance, continuous delivery and apply them on your
+infrastructure to achieve a certain level of automation.
+
+If you take another look at the resources that we have just created, you will
+notice in both of them a value called `interval`. This value defines the amount
+of time between each attempt of reconciliation made by Flux, that means that every
+2m (by our demonstration) Flux will look at the git repository and if ir notices
+any change, it will update the local repo, as of consequence the helm release
+will also update based on changes on the Helm chart.
+
+FluxCD also allows updates based on container images updates, and provides tools
+that allow you to automate the update of your git repository based on these images
+updates.  For more information about image automation, please refer to the
+[official website](https://fluxcd.io/flux/components/image/).
+
 ## Conclusion
 
 You have just learned how to make use of the resources from FluxCD, made
