@@ -1,13 +1,13 @@
-# Deploying your application to StarlingX
+# Deploying your application to StarlingX with FluxCD
 
-An application can be deployed in many ways on the 
+An application can be deployed in many ways on the
 [Kubernetes cluster(s) that StarlingX manages](https://docs.starlingx.io/operations/k8s_cluster.html)
 :
 
-- [raw Kubernetes](https://kubernetes.io/docs/tutorials/kubernetes-basics/deploy-app/deploy-intro/);
-- [Helm](https://helm.sh/docs/intro/using_helm/#helm-install-installing-a-package);
-- [Flux](https://fluxcd.io/); and finally
-- StarlingX Application, which benefits from tight integration with the
+- [with plain Kubernetes](https://kubernetes.io/docs/tutorials/kubernetes-basics/deploy-app/deploy-intro/) methods;
+- with [Helm](https://helm.sh/docs/intro/using_helm/#helm-install-installing-a-package);
+- with [Flux](https://fluxcd.io/); and finally
+- as a StarlingX Application, which benefits from tight integration with the
   [StarlingX system](https://opendev.org/starlingx/config).
 
 In this article I will continue our deployment demonstrations, this time with
@@ -21,9 +21,27 @@ the related [Starlingx install guide](https://docs.starlingx.io/deploy_install_g
 
 ## The Demo App
 
-I will use the same application demonstrated in the previous post. If you want
-to know more about the demo app, please visit the
+I will use the same application demonstrated in the previous post, if you wish
+to see the previous installment of this series please visit[](). If you want to
+know more about the demo app, please visit the
 [demo app repository](https://github.com/bmuniz-daitan/poc-starlingx-messages)
+
+
+## GitOps and FluxCD
+
+One of the greatest benefits of using FluxCD resources, is the possibility to
+apply GitOps to your deployments. GitOps is a set of practices, such as version
+control, collaboration, compliance, continuous delivery and apply them on your
+infrastructure to achieve a certain level of automation. GitOps uses a Git
+repository as a single source of thruth for all of your configurations regarding
+infrastructure and applications.
+
+With the use of GitOps through FluxCD you have a set of tools that allows you to
+enable a reliable and automated approach of deploying and managing infrastruture
+and applications, improving reproducibility and facilitating maintenance and
+scalability of your systems
+
+To know more about FluxCD visit the [official website](https://fluxcd.io).
 
 
 ## Deploying the Demo App
@@ -34,7 +52,6 @@ While the StarlingX platform does not have the FluxCD CLI, it does have its
 resources. An application can be easily deployed and managed by means of the
 resources made available by Flux. For a list of all available Flux resources
 refer to the [official documentation](https://fluxcd.io/flux/components/).
-
 
 There are many ways of deploying an application using Flux. In this demonstration
 I will deploy the demo app by creating a source controller and a Helm controller.
@@ -221,25 +238,6 @@ specific use case. For example, another resource available in flux that can be u
 is the `kustomization`. This resource is responsible for defining a pipeline
 for fetching, decrypting, building, validating and applying kustomize overlays
 or plain Kubernetes manifests.
-
-## GitOps
-
-One of the greatest benefits of using FluxCD resources, is the possibility to
-apply GitOps to your deployments. GitOps is a set of practices, such as version
-control, collaboration, compliance, continuous delivery and apply them on your
-infrastructure to achieve a certain level of automation.
-
-If you take another look at the resources that we have just created, you will
-notice in both of them a value called `interval`. This value defines the amount
-of time between each attempt of reconciliation made by Flux, that means that every
-2m (by our demonstration) Flux will look at the git repository and if ir notices
-any change, it will update the local repo, as of consequence the helm release
-will also update based on changes on the Helm chart.
-
-FluxCD also allows updates based on container images updates, and provides tools
-that allow you to automate the update of your git repository based on these images
-updates.  For more information about image automation, please refer to the
-[official website](https://fluxcd.io/flux/components/image/).
 
 ## Conclusion
 
